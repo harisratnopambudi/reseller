@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haris Gold Miner — Reseller Dashboard</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IM+Fell+English+SC&family=Cinzel:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --gold: #C9A84C;
+            --gold-light: #E8C96A;
+            --gold-pale: #F5E9C8;
+            --dark: #1A1610;
+            --dark2: #2C2518;
+            --dark3: #3D3420;
+            --mid: #6B5B35;
+            --cream: #FAF5E9;
+            --cream2: #F0E8D0;
+            --text: #2C2518;
+            --text-muted: #7A6A45;
+            --success: #4A7C59;
+            --danger: #9B3A2A;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--text);
+            font-family: 'Cormorant Garamond', 'Libre Baskerville', Georgia, serif;
+            min-height: 100vh;
+            font-size: 15px;
+            letter-spacing: 0.1px;
+        }
+
+        /* HEADER */
+        header {
+            background: var(--dark);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--dark3);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .logo h1 {
+            font-family: 'Cinzel', 'Cormorant Garamond', serif;
+            font-size: 20px;
+            color: var(--gold-light);
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            margin: 0;
+        }
+
+        .logo span {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 10px;
+            color: var(--mid);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: block;
+            font-style: italic;
+        }
+
+        nav {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            color: var(--mid);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        nav button.active,
+        nav button:hover {
+            background: var(--dark3);
+            color: var(--gold-light);
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* CARDS & GRID */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            border: 1px solid var(--cream2);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--cream2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-family: 'Cinzel', 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark2);
+            letter-spacing: 0.5px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        /* INPUTS */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--cream2);
+            border-radius: 8px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            background: var(--cream);
+            color: var(--text);
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--gold);
+            background: white;
+        }
+
+        input[readonly],
+        textarea[readonly] {
+            background: var(--cream2);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        .input-highlight {
+            background: #FFFDF5;
+            border-color: var(--gold-light);
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 11px 22px;
+            border-radius: 8px;
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--dark);
+        }
+
+        .btn-gold:hover {
+            filter: brightness(1.05);
+        }
+
+        .btn-dark {
+            background: var(--dark2);
+            color: var(--gold-light);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--cream2);
+            color: var(--text-muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        /* STAT BOXES & PRICE RESULT */
+        .stat-box {
+            background: white;
+            border: 1px solid var(--cream2);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .stat-value.gold {
+            color: var(--gold);
+        }
+
+        .stat-value.green {
+            color: var(--success);
+        }
+
+        .price-result {
+            background: var(--dark);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .price-result-label {
+            font-size: 11px;
+            color: var(--mid);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .price-result-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            color: var(--gold-light);
+            font-weight: 600;
+            word-break: break-word;
+            letter-spacing: 0.5px;
+        }
+
+        .price-breakdown {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--mid);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .price-row.total {
+            color: var(--gold);
+            font-weight: 500;
+            border-top: 1px solid var(--dark3);
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        /* TABLE */
+        .table-wrap {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 500px;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--cream);
+            border-bottom: 1px solid var(--cream2);
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--cream2);
+            color: var(--text);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-gold {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-green {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-blue {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .profit-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #D1FAE5;
+            color: #065F46;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 13px;
+            font-family: 'Cormorant Garamond', serif;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        /* SECTION TITLE & DIVIDER */
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: var(--dark);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--cream2);
+            margin: 24px 0;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 22, 16, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--cream2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 17px;
+            color: var(--dark);
+            letter-spacing: 0.5px;
+        }
+
+        .close-btn {
+            background: var(--cream);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 24px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--cream2);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--dark);
+            color: var(--gold-light);
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 500;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s;
+            border-left: 3px solid var(--gold);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        /* INVOICE STYLING (UNTUK CETAK KERTAS) */
+        .invoice-paper {
+            background: white;
+            color: var(--dark);
+            font-family: 'DM Sans', sans-serif;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--cream);
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .inv-brand-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .inv-logo-box {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
+        }
+
+        .inv-brand h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 17px;
+            color: var(--dark);
+            margin: 0;
+            line-height: 1.1;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .inv-brand p {
+            color: var(--gold);
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 2px 0 0 0;
+            font-weight: 600;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .inv-title-box {
+            text-align: right;
+        }
+
+        .inv-title-text {
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 5px;
+            color: var(--dark);
+            margin-bottom: 4px;
+            font-family: 'Cinzel', serif;
+            line-height: 1;
+        }
+
+        .inv-no-badge {
+            display: inline-block;
+            background: var(--cream);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--dark2);
+            border: 1px solid var(--cream2);
+        }
+
+        .inv-info-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 11px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .inv-info-box {
+            background: #FFFDF5;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--cream2);
+            word-break: break-word;
+        }
+
+        .inv-info-box p {
+            margin-bottom: 3px;
+            line-height: 1.3;
+        }
+
+        .inv-label {
+            font-weight: 600;
+            color: var(--gold);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .inv-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--cream2);
+            position: relative;
+            z-index: 1;
+            min-width: unset;
+        }
+
+        .inv-table th {
+            background: var(--cream);
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--cream2);
+            white-space: normal;
+        }
+
+        .inv-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--cream2);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px;
+        }
+
+        .inv-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .inv-totals-box {
+            background: #FFFDF5;
+            border-radius: 8px;
+            padding: 10px 16px;
+            width: 100%;
+            max-width: 280px;
+            float: right;
+            border: 1px solid var(--cream2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .inv-totals .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .inv-totals .row span {
+            white-space: nowrap;
+        }
+
+        .inv-totals .row.grand-total {
+            border-top: 1px dashed var(--gold);
+            font-weight: 700;
+            font-size: 15px;
+            padding-top: 8px;
+            margin-top: 4px;
+            color: var(--dark);
+        }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        .watermark-lunas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 80px;
+            font-family: 'Cinzel', serif;
+            color: rgba(201, 168, 76, 0.18);
+            border: 6px solid rgba(201, 168, 76, 0.18);
+            border-radius: 16px;
+            padding: 8px 28px;
+            pointer-events: none;
+            z-index: 10;
+            font-weight: 700;
+            letter-spacing: 10px;
+        }
+
+        @media print {
+            body { display: none; }
+        }
+
+        /* PREMIUM PRICELIST DESIGN (UNTUK DI-DOWNLOAD) */
+        .ss-wrapper {
+            background: #0D0B09;
+            background-image: radial-gradient(circle at 50% 0%, #2A2210 0%, #0D0B09 80%);
+            border-radius: 16px;
+            padding: 32px 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #3A2F1D;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .ss-brand-container {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ss-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            color: var(--gold-light);
+            margin: 0 0 6px 0;
+            font-weight: 700;
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
+
+        .ss-subtitle {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #A89B7D;
+            margin: 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+        }
+
+        .ss-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(232, 201, 106, 0.1);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        .ss-date-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--dark);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 10px rgba(201, 168, 76, 0.2);
+        }
+
+        .ss-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: unset;
+        }
+
+        .ss-gram {
+            font-size: 15px;
+            font-weight: 600;
+            color: #E6DFD1;
+            font-family: 'Cormorant Garamond', serif;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(232, 201, 106, 0.1);
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+        }
+
+        .ss-harga {
+            text-align: right;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold-light);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(232, 201, 106, 0.1);
+        }
+
+        .ss-table tr:last-child .ss-gram,
+        .ss-table tr:last-child .ss-harga {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .ss-footer {
+            text-align: center;
+            margin-top: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ss-footer-quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 14px;
+            color: #A89B7D;
+            font-style: italic;
+            margin-bottom: 16px;
+            letter-spacing: 0.3px;
+        }
+
+        .ss-footer-contact {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #25D366, #20BD5C);
+            padding: 9px 20px;
+            border-radius: 24px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        .ss-preorder-note {
+            background: rgba(201, 168, 76, 0.08);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: #C9A95E;
+            line-height: 1.7;
+            margin-bottom: 14px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ========================================= */
+        /* RESPONSIVE KHUSUS MOBILE (HP)             */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px 20px;
+            }
+
+            nav {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            nav button {
+                flex: 1;
+                text-align: center;
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .container {
+                padding: 20px 16px;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .section-title {
+                font-size: 22px;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .card-header .btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .stat-box {
+                padding: 16px;
+            }
+
+            /* Perbaikan Modal di HP */
+            .modal {
+                max-height: 85vh;
+            }
+
+            #modalInvoice .modal {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 12px;
+            }
+
+            /* Perbaikan Layout Invoice di Layar Kecil */
+            .inv-info-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .inv-info-box {
+                text-align: left !important;
+            }
+
+            /* Paksa rata kiri di HP */
+            .inv-title-box {
+                text-align: left;
+                margin-top: 12px;
+            }
+
+            .inv-totals-box {
+                float: none;
+                width: 100%;
+                margin-top: 16px;
+                max-width: 100%;
+            }
+
+            .watermark-lunas {
+                font-size: 40px;
+                padding: 6px 16px;
+                letter-spacing: 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">✦</div>
+            <div>
+                <h1>Haris Gold Miner</h1>
+                <span>Reseller Dashboard</span>
+            </div>
+        </div>
+        <nav>
+            <button class="active" onclick="showPage('kalkulator')">Transaksi & Update</button>
+            <button onclick="showPage('setting')">Setting Toko & Pricelist</button>
+            <button onclick="showPage('pembukuan')">Pembukuan</button>
+        </nav>
+    </header>
+
+    <div class="container">
+
+        <div class="page active" id="page-kalkulator">
+            <h2 class="section-title">Manajemen Transaksi Harian</h2>
+            <p class="section-sub">Mulai hari Anda dengan Generate Harga dari Supplier, lalu gunakan Kalkulator untuk
+                transaksi.</p>
+
+            <div class="card" style="border-color: var(--gold-light);">
+                <div class="card-header" style="background: #FFFDF5;">
+                    <span class="card-title">1. Generator & Update Harga Hari Ini</span>
+                    <span class="badge badge-gold">STEP 1</span>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>1. Paste Chat Supplier Di Sini</label>
+                                <textarea id="textSupplier" rows="6"
+                                    style="width:100%; padding:14px; border-radius:8px; border:1.5px solid var(--cream2); font-family:'DM Mono'; font-size:13px;"
+                                    placeholder="Contoh:&#10;0.5 gr ⭕️ 1430&#10;1gr ⭕️ 2.900.000"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>2. Nominal Keuntungan Pukul Rata (Rp)</label>
+                                <input type="text" id="marginBroadcast" placeholder="cth: 50.000"
+                                    oninput="formatInput(this)" />
+                            </div>
+                            <button class="btn btn-gold" style="width:100%; padding:12px;"
+                                onclick="generateBroadcast()">📥 Update Harga & Generate Pesan</button>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>Pesan Broadcast (Format Singkat)</label>
+                                <textarea id="textHasil" rows="10"
+                                    style="width:100%; padding:14px; border-radius:8px; border:1.5px solid var(--gold); background:white; font-family:'DM Sans'; resize:none;"
+                                    readonly placeholder="Pesan singkat akan muncul di sini..."></textarea>
+                            </div>
+                            <button class="btn btn-outline" style="width:100%; padding:12px;"
+                                onclick="copyBroadcast()">📋 Copy Teks Broadcast</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Daftar Harga Aktif <span id="activeDateTitle"
+                            style="font-size:13px; color:var(--text-muted); font-weight:400; margin-left:8px;"></span></span>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Berat</th>
+                                    <th>Harga Modal (Supplier)</th>
+                                    <th>Keuntungan Anda</th>
+                                    <th>Harga Jual (Pusat)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelBody">
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📥</div>
+                                            <p>Silakan Generate Harga via tool di atas terlebih dahulu.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <span class="card-title">2. Kalkulator Transaksi</span>
+                        <span class="badge badge-gold" style="background:var(--dark); color:var(--gold-light);">STEP
+                            2</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Pilih Berat yang Dibeli</label>
+                            <select id="gramSelect" onchange="syncKalkulator()" class="input-highlight">
+                                <option value="0.5">0.5 gram</option>
+                                <option value="1" selected>1 gram</option>
+                                <option value="2">2 gram</option>
+                                <option value="3">3 gram</option>
+                                <option value="5">5 gram</option>
+                                <option value="10">10 gram</option>
+                                <option value="25">25 gram</option>
+                                <option value="50">50 gram</option>
+                                <option value="100">100 gram</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga Modal (Otomatis dari Update Hari Ini)</label>
+                            <input type="text" id="hargaSupplier" class="input-highlight"
+                                oninput="formatInput(this); hitungHarga()" placeholder="Otomatis terisi..." />
+                        </div>
+                        <div class="form-group">
+                            <label>Keuntungan (Otomatis dari input Generator)</label>
+                            <input type="text" id="marginInput" class="input-highlight"
+                                oninput="formatInput(this); hitungHarga()" placeholder="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="card-header">
+                            <span class="card-title">Ringkasan Tagihan</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="price-result" style="margin-top:0;">
+                                <div class="price-result-label">Harga Satuan</div>
+                                <div class="price-result-value" id="hargaJual">Rp —</div>
+                                <div class="price-breakdown">
+                                    <div class="price-row"><span>Harga Modal Supplier</span><span
+                                            id="brHargaSupplier">—</span></div>
+                                    <div class="price-row"><span>Keuntungan</span><span id="brMarginNominal">—</span>
+                                    </div>
+                                    <div class="price-row total"><span>Total Harga</span><span id="brTotal">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:14px" onclick="openModal()">
+                        ＋ Buat Invoice & Catat Transaksi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-setting">
+            <h2 class="section-title">Setting Toko & Pricelist Pelanggan</h2>
+            <p class="section-sub">Atur informasi toko dan download tabel harga elegan di bawah ini untuk dikirim ke
+                pembeli.</p>
+
+            <div class="grid-2">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header"><span class="card-title">Informasi Profil Toko</span></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Nama Toko / Brand Anda</label>
+                            <input type="text" id="namaToko" placeholder="cth: Haris Gold Miner"
+                                value="Haris Gold Miner" />
+                        </div>
+                        <div class="form-group">
+                            <label>Kontak / Alamat Toko (Muncul di Invoice)</label>
+                            <textarea id="alamatToko" rows="3" placeholder="cth: Jl. Raya Purwakarta No.1"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Nomor WA / Kontak (Tampil di Pricelist)</label>
+                            <input type="text" id="kontakAdmin" placeholder="cth: 087784477751" value="087784477751" />
+                        </div>
+                        <button class="btn btn-dark" style="width:100%;margin-top:8px"
+                            onclick="simpanPengaturan()">Simpan Pengaturan</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card-header" style="background:transparent; border:none; padding:0 0 16px 0;">
+                        <span class="card-title">Pricelist Khusus Pelanggan</span>
+                        <button id="btnDownloadPricelist" class="btn btn-gold btn-sm" onclick="downloadPricelist()">⬇️
+                            Download JPG</button>
+                    </div>
+
+                    <div class="ss-wrapper" id="captureArea">
+                        <div class="ss-brand-container">
+                            <h2 class="ss-title" id="plTokoNama">Haris Gold Miner</h2>
+                            <p class="ss-subtitle">Pricelist Logam Mulia Antam</p>
+                        </div>
+
+                        <div class="ss-card">
+                            <div style="text-align:center;">
+                                <div class="ss-date-badge" id="plTgl">UPDATE: -</div>
+                            </div>
+
+                            <table class="ss-table">
+                                <tbody id="pricelistPelangganBody">
+                                    <tr>
+                                        <td colspan="2"
+                                            style="text-align:center; padding: 30px 20px; color: #A89B7D; font-size:13px; font-style:italic;">
+                                            Belum ada data.<br>Generate harga hari ini terlebih dahulu.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ss-footer">
+                            <div class="ss-footer-quote">"Emas adalah investasi masa depan yang abadi."</div>
+                            <div class="ss-preorder-note">
+                                Harga berlaku untuk sistem <strong>Pre Order</strong> — barang dikirim pada hari berikutnya setelah pembayaran dikonfirmasi.<br>
+                                Untuk melakukan pemesanan, pembayaran dilakukan secara <strong>penuh (lunas)</strong> terlebih dahulu kepada admin.
+                            </div>
+                            <div id="plKontak" class="ss-footer-contact" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-pembukuan">
+            <div
+                style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px">
+                <div>
+                    <h2 class="section-title">Pembukuan Penjualan</h2>
+                </div>
+                <div style="display:flex;gap:10px">
+                    <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusSemua()">Hapus Semua</button>
+                </div>
+            </div>
+
+            <div class="grid-3" style="margin-bottom:24px" id="statGrid">
+                <div class="stat-box">
+                    <div class="stat-label">Total Transaksi</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Omzet</div>
+                    <div class="stat-value gold" id="statOmzet">Rp 0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Keuntungan</div>
+                    <div class="stat-value green" id="statProfit">Rp 0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Pembeli</th>
+                                <th>Berat</th>
+                                <th>Harga Modal</th>
+                                <th>Harga Jual</th>
+                                <th>Profit</th>
+                                <th>Bayar</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pembukuanBody">
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📒</div>
+                                        <h3>Belum ada transaksi</h3>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Catat Transaksi</span>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Nama Pembeli</label><input type="text" id="namaPembeli"
+                        placeholder="cth: Budi Santoso" /></div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>No. HP / Alamat</label><input type="text" id="kontakPembeli"
+                            placeholder="cth: 08123456789" /></div>
+                    <div class="form-group"><label>Nomor Seri LM</label><input type="text" id="nomorSeri"
+                            placeholder="cth: A1234567" /></div>
+                </div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>Jumlah / Qty</label><input type="number" id="qtyBeli" value="1"
+                            min="1" oninput="updateCatatTotal()" /></div>
+                    <div class="form-group"><label>Metode Pembayaran</label><select id="metodeBayar">
+                            <option>Transfer Bank</option>
+                            <option>Tunai</option>
+                            <option>QRIS</option>
+                        </select></div>
+                </div>
+                <div class="form-group"><label>Tanggal Transaksi</label><input type="date" id="tanggalTransaksi" />
+                </div>
+
+                <div style="background:var(--cream);border-radius:10px;padding:16px;margin-top:4px">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px">
+                        Ringkasan</div>
+                    <div class="price-row" style="margin-bottom:8px"><span>Harga Jual / pcs</span><span
+                            id="mJual">—</span></div>
+                    <div class="price-row" style="margin-bottom:0;font-weight:bold;color:var(--dark);font-size:16px;">
+                        <span>Total Tagihan</span><span id="mTagihan">—</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+                <button class="btn btn-gold" onclick="simpanTransaksi()">✓ Simpan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalInvoice">
+        <div class="modal" style="max-width: 720px;">
+            <div class="modal-header hide-print">
+                <span class="modal-title">Preview Invoice (Ukuran Nota)</span>
+                <button class="close-btn" onclick="closeInvoice()">✕</button>
+            </div>
+
+            <div class="modal-body invoice-paper" id="invoiceArea">
+                <div class="watermark-lunas">LUNAS</div>
+                <div class="inv-header">
+                    <div>
+                        <div class="inv-brand-wrapper">
+                            <div class="inv-logo-box">✦</div>
+                            <div class="inv-brand">
+                                <h2 id="invTokoNama">Haris Gold Miner</h2>
+                                <p>Logam Mulia & Perhiasan</p>
+                            </div>
+                        </div>
+                        <div id="invTokoAlamat"
+                            style="color:var(--text-muted); font-size:11px; max-width:280px; white-space:pre-wrap; line-height:1.4;">
+                            Alamat Toko</div>
+                    </div>
+
+                    <div class="inv-title-box">
+                        <div class="inv-title-text">INVOICE</div>
+                        <div class="inv-no-badge" id="invNo">INV-000000</div>
+                    </div>
+                </div>
+
+                <div class="inv-info-grid">
+                    <div class="inv-info-box">
+                        <span class="inv-label">Ditagihkan Kepada:</span>
+                        <p><strong id="invPembeliNama" style="font-size:13px; color:var(--dark);">Nama Pembeli</strong>
+                        </p>
+                        <p id="invPembeliKontak" style="color:var(--text-muted);">Kontak</p>
+                    </div>
+                    <div class="inv-info-box" style="text-align: right;">
+                        <span class="inv-label">Detail Transaksi:</span>
+                        <p>Tgl: <strong id="invTanggal" style="color:var(--dark);">01 Jan 2026</strong></p>
+                        <p>Bayar: <strong id="invMetode" style="color:var(--dark);">Tunai</strong></p>
+                    </div>
+                </div>
+
+                <div class="table-wrap" style="overflow-x: auto; padding-bottom: 8px;">
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th style="width:45%">Deskripsi Item</th>
+                                <th style="text-align:center">Qty</th>
+                                <th style="text-align:right">Harga Satuan</th>
+                                <th style="text-align:right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong
+                                        style="font-family:'DM Sans'; font-size:13px; display:block; margin-bottom:2px; color:var(--dark);">Logam
+                                        Mulia Antam</strong>
+                                    <span style="color:var(--text-muted); font-size:11px;">Berat: <span id="invGram"
+                                            style="font-weight:600; color:var(--gold);">1</span> gram</span>
+                                    <span id="invSeriWrapper"
+                                        style="color:var(--text-muted); font-size:11px; display:none;"><br>S/N: <span
+                                            id="invSeri"
+                                            style="font-family:'DM Mono', monospace; color:var(--dark2);"></span></span>
+                                </td>
+                                <td style="text-align:center" id="invQty">1</td>
+                                <td style="text-align:right" id="invHargaSatuan">Rp 0</td>
+                                <td style="text-align:right; font-weight:500;" id="invTotalBaris">Rp 0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="clearfix">
+                    <div class="inv-totals-box">
+                        <div class="inv-totals">
+                            <div class="row">
+                                <span>Subtotal</span>
+                                <span id="invSubtotal">Rp 0</span>
+                            </div>
+                            <div class="row grand-total">
+                                <span>TOTAL TAGIHAN</span>
+                                <span id="invGrandTotal">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 24px; text-align: center; color: var(--text-muted); font-size: 10px; clear: both; position:relative; z-index:1; padding-top: 10px;">
+                    <p style="margin-bottom: 4px; font-weight: 500; color: var(--dark);">Terima kasih telah berbelanja
+                        di <span id="invFooterToko">Haris Gold Miner</span>.</p>
+                    <p>Emas adalah investasi masa depan yang abadi.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer hide-print" style="background:var(--cream);">
+                <button class="btn btn-outline" onclick="closeInvoice()">Tutup</button>
+                <button class="btn btn-gold" id="btnCetakInvoice" onclick="cetakInvoicePDF()">🖨️ Cetak / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== STATE ====================
+        let transaksi = [];
+        let activePrices = { date: '', items: {} };
+        let currentCalc = {};
+
+        // Fungsi untuk mendapatkan tanggal lokal yang benar (WIB) tanpa terpengaruh UTC
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function loadData() {
+            try {
+                const t = localStorage.getItem('lm_transaksi');
+                const s = localStorage.getItem('lm_settings');
+                const ap = localStorage.getItem('lm_active_prices');
+
+                if (t) transaksi = JSON.parse(t);
+                if (ap) activePrices = JSON.parse(ap);
+                if (s) {
+                    const set = JSON.parse(s);
+                    if (document.getElementById('namaToko')) document.getElementById('namaToko').value = set.nama || 'Haris Gold Miner';
+                    if (document.getElementById('alamatToko')) document.getElementById('alamatToko').value = set.alamat || '';
+                    if (document.getElementById('kontakAdmin')) document.getElementById('kontakAdmin').value = set.kontakAdmin || '087784477751';
+                } else {
+                    document.getElementById('kontakAdmin').value = '087784477751';
+                }
+            } catch (e) { }
+        }
+
+        function saveData() {
+            localStorage.setItem('lm_transaksi', JSON.stringify(transaksi));
+            localStorage.setItem('lm_active_prices', JSON.stringify(activePrices));
+        }
+
+        function simpanPengaturan() {
+            const settings = {
+                nama: document.getElementById('namaToko').value,
+                alamat: document.getElementById('alamatToko').value,
+                kontakAdmin: document.getElementById('kontakAdmin').value
+            };
+            localStorage.setItem('lm_settings', JSON.stringify(settings));
+            renderPricelistPelanggan(); // Update nama toko & kontak di pricelist
+            showToast('Pengaturan Toko Disimpan ✓');
+        }
+
+        loadData();
+
+        // ==================== UTIL ====================
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            event.target.classList.add('active');
+            if (page === 'pembukuan') renderPembukuan();
+        }
+
+        function formatRp(n) { return (!n && n !== 0) ? '—' : 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+        function parseRp(str) { return parseInt(str.replace(/[^0-9]/g, '')) || 0; }
+        function formatInput(input) {
+            const val = parseRp(input.value);
+            input.value = val > 0 ? val.toLocaleString('id-ID') : '';
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        // ==================== DAFTAR HARGA & KALKULATOR ====================
+        function renderActivePrices() {
+            const body = document.getElementById('tabelBody');
+            const titleDate = document.getElementById('activeDateTitle');
+
+            if (!activePrices.date || Object.keys(activePrices.items).length === 0) {
+                titleDate.textContent = '';
+                body.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📥</div><p>Silakan Generate Harga via tool di atas terlebih dahulu.</p></div></td></tr>';
+                renderPricelistPelanggan();
+                return;
+            }
+
+            const d = new Date(activePrices.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            titleDate.textContent = `(Update: ${d})`;
+
+            let html = '';
+            [0.5, 1, 2, 3, 5, 10].forEach(g => {
+                if (activePrices.items[g]) {
+                    const data = activePrices.items[g];
+                    html += `<tr>
+        <td style="font-weight:600">${g}g</td>
+        <td>${formatRp(data.supplier)}</td>
+        <td><span class="profit-chip">+${formatRp(data.profit)}</span></td>
+        <td style="font-weight:500;color:var(--dark)">${formatRp(data.total)}</td>
+      </tr>`;
+                }
+            });
+            body.innerHTML = html;
+            renderPricelistPelanggan(); // Sinkronkan juga tabel screenshot
+        }
+
+        function syncKalkulator() {
+            const gram = parseFloat(document.getElementById('gramSelect').value);
+            const supplierInput = document.getElementById('hargaSupplier');
+            const marginInput = document.getElementById('marginInput');
+
+            if (activePrices.items[gram]) {
+                supplierInput.value = activePrices.items[gram].supplier.toLocaleString('id-ID');
+                marginInput.value = activePrices.items[gram].profit > 0 ? activePrices.items[gram].profit.toLocaleString('id-ID') : '';
+            } else {
+                supplierInput.value = '';
+                marginInput.value = '';
+            }
+            hitungHarga();
+        }
+
+        function hitungHarga() {
+            const gram = parseFloat(document.getElementById('gramSelect').value);
+            const supplier = parseRp(document.getElementById('hargaSupplier').value);
+            const profitNominal = parseRp(document.getElementById('marginInput').value) || 0;
+
+            if (!supplier) {
+                document.getElementById('hargaJual').textContent = 'Rp —';
+                ['brHargaSupplier', 'brMarginNominal', 'brTotal'].forEach(id => document.getElementById(id).textContent = '—');
+                currentCalc = {};
+                return;
+            }
+
+            const total = supplier + profitNominal;
+            currentCalc = { gram, supplier, profit: profitNominal, total };
+
+            document.getElementById('hargaJual').textContent = formatRp(total);
+            document.getElementById('brHargaSupplier').textContent = formatRp(supplier);
+            document.getElementById('brMarginNominal').textContent = formatRp(profitNominal);
+            document.getElementById('brTotal').textContent = formatRp(total);
+        }
+
+        // ==================== GENERATOR BROADCAST & LOGIKA PARSING ====================
+        function generateBroadcast() {
+            const rawText = document.getElementById('textSupplier').value;
+            const profitNominal = parseRp(document.getElementById('marginBroadcast').value) || 0;
+
+            // Gunakan waktu lokal agar tidak geser ke hari sebelumnya di WIB
+            const todayDate = getLocalDateString();
+
+            if (!rawText.trim()) { showToast('Teks supplier masih kosong!'); return; }
+
+            let outputText = '';
+            let hasItems = false;
+            let newActiveItems = {};
+
+            rawText.split('\n').forEach(line => {
+                const match = line.match(/([\d\.]+)\s*gr\s*[^\d]+([\d\.]+)/i);
+                if (match) {
+                    const gram = parseFloat(match[1]);
+                    if (gram >= 0.5 && gram <= 10) {
+                        hasItems = true;
+
+                        let parsedSupplierStr = match[2].replace(/\./g, '');
+                        let basePrice = parseInt(parsedSupplierStr);
+
+                        if (basePrice < 100000) {
+                            basePrice = basePrice * 1000;
+                        }
+
+                        const hargaJual = basePrice + profitNominal;
+
+                        newActiveItems[gram] = {
+                            supplier: basePrice,
+                            profit: profitNominal,
+                            total: hargaJual
+                        };
+
+                        const hargaSingkat = hargaJual / 1000;
+                        outputText += `*${gram} gr* ⭕️ Rp ${hargaSingkat.toLocaleString('id-ID')}\n`;
+                    }
+                }
+            });
+
+            if (!hasItems) { showToast('Tidak ditemukan format harga yang valid'); return; }
+
+            document.getElementById('textHasil').value = outputText.trim();
+
+            // Simpan jam lokal saat generate
+            const now = new Date();
+            const jamStr = `${String(now.getHours()).padStart(2,'0')}.${String(now.getMinutes()).padStart(2,'0')}`;
+
+            activePrices = { date: todayDate, jam: jamStr, items: newActiveItems };
+            saveData();
+
+            renderActivePrices();
+            syncKalkulator();
+
+            showToast('Sistem diupdate & Pesan siap ✨');
+        }
+
+        function copyBroadcast() {
+            const c = document.getElementById('textHasil');
+            if (!c.value) return;
+            c.select(); document.execCommand('copy'); showToast('Teks disalin! ✓');
+        }
+
+        // ==================== PRICELIST PELANGGAN SCREENSHOT/DOWNLOAD ====================
+        function renderPricelistPelanggan() {
+            const body = document.getElementById('pricelistPelangganBody');
+            const plTgl = document.getElementById('plTgl');
+            const plToko = document.getElementById('plTokoNama');
+            const plKontak = document.getElementById('plKontak');
+
+            const tokoNama = document.getElementById('namaToko').value || 'Haris Gold Miner';
+            const kontakAdmin = document.getElementById('kontakAdmin').value;
+            plToko.textContent = tokoNama;
+
+            if (kontakAdmin) {
+                plKontak.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" style="flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.856L.054 23.486a.75.75 0 0 0 .921.921l5.763-1.498A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.686-.523-5.204-1.43l-.364-.217-3.77.98.999-3.648-.235-.374A9.96 9.96 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg><span style="color:white">${kontakAdmin}</span>`;
+                plKontak.style.display = 'inline-flex';
+            } else {
+                plKontak.style.display = 'none';
+            }
+
+            if (!activePrices.date || Object.keys(activePrices.items).length === 0) {
+                plTgl.textContent = 'UPDATE: -';
+                body.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 30px 20px; color: #A89B7D; font-size:13px; font-style:italic;">Belum ada data.<br>Generate harga hari ini terlebih dahulu.</td></tr>';
+                return;
+            }
+
+            const dateObj = new Date(activePrices.date + "T00:00:00");
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const dateStr = `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+            const jamStr = activePrices.jam ? ` JAM ${activePrices.jam} WIB` : '';
+
+            plTgl.textContent = `UPDATE: ${dateStr.toUpperCase()}${jamStr}`;
+
+            let html = '';
+            [0.5, 1, 2, 3, 5, 10].forEach(g => {
+                if (activePrices.items[g]) {
+                    const total = activePrices.items[g].total;
+                    html += `<tr>
+        <td class="ss-gram">${g} Gram</td>
+        <td class="ss-harga">${formatRp(total)}</td>
+      </tr>`;
+                }
+            });
+            body.innerHTML = html;
+        }
+
+        function downloadPricelist() {
+            const captureArea = document.getElementById('captureArea');
+            const btn = document.getElementById('btnDownloadPricelist');
+
+            if (!activePrices.date || Object.keys(activePrices.items).length === 0) {
+                showToast('Generate harga hari ini terlebih dahulu!');
+                return;
+            }
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Memproses...';
+            btn.disabled = true;
+
+            html2canvas(captureArea, {
+                scale: 2,
+                backgroundColor: '#0D0B09',
+                useCORS: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+                const link = document.createElement('a');
+                link.download = `Pricelist_Emas_${getLocalDateString()}.jpg`;
+                link.href = imgData;
+                link.click();
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Pricelist JPG berhasil diunduh! ✓');
+            }).catch(err => {
+                console.error('Error generating image:', err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Gagal mengunduh gambar.');
+            });
+        }
+
+        // ==================== TRANSAKSI & INVOICE ====================
+        function openModal() {
+            if (!currentCalc.total) { showToast('Pilih / Hitung harga terlebih dahulu'); return; }
+
+            document.getElementById('tanggalTransaksi').value = getLocalDateString();
+
+            document.getElementById('mJual').textContent = formatRp(currentCalc.total);
+            updateCatatTotal();
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function updateCatatTotal() {
+            if (!currentCalc.total) return;
+            const qty = parseInt(document.getElementById('qtyBeli').value) || 1;
+            document.getElementById('mTagihan').textContent = formatRp(currentCalc.total * qty);
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+        function simpanTransaksi() {
+            const nama = document.getElementById('namaPembeli').value.trim();
+            const nomorSeri = document.getElementById('nomorSeri').value.trim();
+
+            if (!nama) { showToast('Nama pembeli wajib diisi'); return; }
+            const qty = parseInt(document.getElementById('qtyBeli').value) || 1;
+            const t = {
+                id: Date.now(),
+                tanggal: document.getElementById('tanggalTransaksi').value,
+                nama, kontak: document.getElementById('kontakPembeli').value,
+                nomorSeri,
+                gram: currentCalc.gram, qty,
+                modal: currentCalc.supplier, hargaJual: currentCalc.total,
+                profit: currentCalc.profit * qty, totalBayar: currentCalc.total * qty,
+                metodeBayar: document.getElementById('metodeBayar').value
+            };
+
+            transaksi.unshift(t); saveData(); closeModal();
+
+            document.getElementById('namaPembeli').value = '';
+            document.getElementById('kontakPembeli').value = '';
+            document.getElementById('nomorSeri').value = '';
+            document.getElementById('qtyBeli').value = '1';
+
+            showToast('Transaksi dicatat ✓');
+        }
+
+        function renderPembukuan() {
+            const list = transaksi;
+            document.getElementById('statTotal').textContent = list.length;
+            document.getElementById('statOmzet').textContent = formatRp(list.reduce((a, t) => a + t.totalBayar, 0));
+            document.getElementById('statProfit').textContent = formatRp(list.reduce((a, t) => a + t.profit, 0));
+
+            if (!list.length) {
+                document.getElementById('pembukuanBody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><h3>Belum ada transaksi</h3></div></td></tr>`;
+                return;
+            }
+
+            const badge = m => `<span class="badge ${m == 'Tunai' ? 'badge-green' : (m == 'Transfer Bank' ? 'badge-blue' : 'badge-gold')}">${m}</span>`;
+            document.getElementById('pembukuanBody').innerHTML = list.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal + "T00:00:00").toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+      <td><strong>${t.nama}</strong></td>
+      <td>${t.gram}g ${t.qty > 1 ? `×${t.qty}` : ''} 
+          ${t.nomorSeri ? `<br><span style="font-size:10px; color:var(--text-muted);">S/N: ${t.nomorSeri}</span>` : ''}
+      </td>
+      <td>${formatRp(t.modal)}</td><td style="font-weight:500">${formatRp(t.totalBayar)}</td>
+      <td><span class="profit-chip">+${formatRp(t.profit)}</span></td><td>${badge(t.metodeBayar)}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="bukaInvoice(${t.id})" style="padding:4px 8px; border-color:var(--gold); color:var(--dark);">🖨️ Inv</button>
+        <button class="btn btn-danger btn-sm" onclick="hapusTransaksi(${t.id})" style="padding:4px 8px;">✕</button>
+      </td>
+    </tr>`).join('');
+        }
+
+        function hapusTransaksi(id) {
+            if (!confirm('Hapus transaksi ini?')) return;
+            transaksi = transaksi.filter(t => t.id !== id);
+            saveData(); renderPembukuan(); showToast('Transaksi dihapus');
+        }
+
+        function hapusSemua() {
+            if (!confirm('Hapus SEMUA transaksi?')) return;
+            transaksi = []; saveData(); renderPembukuan();
+        }
+
+        function bukaInvoice(id) {
+            const t = transaksi.find(x => x.id === id);
+            if (!t) return;
+
+            const tokoNama = document.getElementById('namaToko').value || 'Haris Gold Miner';
+            const tokoAlamat = document.getElementById('alamatToko').value || '';
+
+            document.getElementById('invTokoNama').textContent = tokoNama;
+            document.getElementById('invFooterToko').textContent = tokoNama;
+            document.getElementById('invTokoAlamat').textContent = tokoAlamat;
+
+            document.getElementById('invNo').textContent = "INV-" + t.id.toString().slice(-6);
+            document.getElementById('invTanggal').textContent = new Date(t.tanggal + "T00:00:00").toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            document.getElementById('invPembeliNama').textContent = t.nama;
+            document.getElementById('invPembeliKontak').textContent = t.kontak || '-';
+            document.getElementById('invMetode').textContent = t.metodeBayar;
+
+            document.getElementById('invGram').textContent = t.gram;
+            document.getElementById('invQty').textContent = t.qty;
+            document.getElementById('invHargaSatuan').textContent = formatRp(t.hargaJual);
+            document.getElementById('invTotalBaris').textContent = formatRp(t.totalBayar);
+
+            const seriWrapper = document.getElementById('invSeriWrapper');
+            const seriText = document.getElementById('invSeri');
+            if (t.nomorSeri) {
+                seriWrapper.style.display = 'inline';
+                seriText.textContent = t.nomorSeri;
+            } else {
+                seriWrapper.style.display = 'none';
+            }
+
+            document.getElementById('invSubtotal').textContent = formatRp(t.totalBayar);
+            document.getElementById('invGrandTotal').textContent = formatRp(t.totalBayar);
+
+            document.getElementById('modalInvoice').classList.add('open');
+        }
+
+        function cetakInvoicePDF() {
+            const paper = document.querySelector('#modalInvoice .invoice-paper');
+            const btn = document.getElementById('btnCetakInvoice');
+            if (!paper) return;
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Memproses...';
+            btn.disabled = true;
+
+            html2canvas(paper, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            }).then(canvas => {
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+                // Hitung ukuran PDF berdasarkan aspek rasio canvas
+                const pxW = canvas.width;
+                const pxH = canvas.height;
+                const mmW = 210; // A4 width mm
+                const mmH = Math.round((pxH / pxW) * mmW);
+
+                const pdf = new jsPDF({
+                    orientation: mmH > mmW ? 'portrait' : 'landscape',
+                    unit: 'mm',
+                    format: [mmW, mmH]
+                });
+
+                pdf.addImage(imgData, 'JPEG', 0, 0, mmW, mmH);
+
+                const invNo = document.getElementById('invNo').textContent || 'INVOICE';
+                pdf.save(`${invNo}.pdf`);
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('PDF berhasil diunduh ✓');
+            }).catch(err => {
+                console.error(err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Gagal generate PDF.');
+            });
+        }
+
+        function closeInvoice() {
+            document.getElementById('modalInvoice').classList.remove('open');
+        }
+
+        function exportCSV() {
+            if (!transaksi.length) { showToast('Tidak ada data untuk diekspor'); return; }
+            const header = ['Tanggal', 'Nama Pembeli', 'Kontak', 'Nomor Seri', 'Berat(g)', 'Qty', 'Harga Modal', 'Harga Jual', 'Total Bayar', 'Profit', 'Metode Bayar'];
+            const rows = transaksi.map((t) => [
+                t.tanggal, t.nama, t.kontak, t.nomorSeri || '', t.gram, t.qty,
+                t.modal, t.hargaJual, t.totalBayar, t.profit, t.metodeBayar
+            ]);
+            const csv = [header, ...rows].map(r => r.map(c => `"${c || ''}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `pembukuan_emas_${getLocalDateString().replace(/\//g, '-')}.csv`;
+            a.click();
+            showToast('CSV berhasil diunduh ✓');
+        }
+
+        // Init State UI
+        renderActivePrices();
+        syncKalkulator();
+    </script>
+</body>
+
+</html>
