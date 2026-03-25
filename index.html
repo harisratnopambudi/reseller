@@ -906,18 +906,16 @@
         }
 
         .ss-footer-contact {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1a1a1a;
-            background: linear-gradient(135deg, #25D366, #20BD5C);
-            padding: 9px 20px;
-            border-radius: 24px;
-            font-family: 'Cinzel', serif;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            display: block;
+            font-size: 12px;
+            color: #C9A95E;
+            background: rgba(201, 168, 76, 0.08);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 10px;
+            padding: 10px 16px;
+            line-height: 1.7;
+            font-family: 'DM Sans', Arial, sans-serif;
+            text-align: center;
         }
 
         .ss-preorder-note {
@@ -1671,8 +1669,8 @@
             plToko.textContent = tokoNama;
 
             if (kontakAdmin) {
-                // Gunakan font system (Arial) agar html2canvas bisa merender tanpa perlu load Google Fonts
-                plKontak.innerHTML = `<span style="background:white; color:#25D366; font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; font-family:Arial,sans-serif; flex-shrink:0; letter-spacing:0; line-height:1.4;">WA</span><span style="color:white; font-family:Arial,sans-serif; font-weight:700; font-size:13px; letter-spacing:0.5px;">${kontakAdmin}</span>`;
+                // Teks biasa seperti kotak preorder note — pasti muncul di JPG
+                plKontak.innerHTML = `Hubungi Admin: <strong style="color:#E8C96A;">${kontakAdmin}</strong>`;
                 plKontak.style.display = 'inline-flex';
             } else {
                 plKontak.style.display = 'none';
@@ -1707,7 +1705,6 @@
         function downloadPricelist() {
             const captureArea = document.getElementById('captureArea');
             const btn = document.getElementById('btnDownloadPricelist');
-            const plKontak = document.getElementById('plKontak');
 
             if (!activePrices.date || Object.keys(activePrices.items).length === 0) {
                 showToast('Generate harga hari ini terlebih dahulu!');
@@ -1718,104 +1715,28 @@
             btn.innerHTML = '⏳ Memproses...';
             btn.disabled = true;
 
-            const kontakAdmin = document.getElementById('kontakAdmin').value || '';
+            html2canvas(captureArea, {
+                scale: 2,
+                backgroundColor: '#0D0B09',
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                const link = document.createElement('a');
+                link.download = `Pricelist_Emas_${getLocalDateString()}.jpg`;
+                link.href = imgData;
+                link.click();
 
-            // Sembunyikan tombol WA asli saat capture (akan digambar manual ke canvas)
-            const origDisplay = plKontak.style.display;
-            plKontak.style.display = 'none';
-
-            setTimeout(() => {
-                html2canvas(captureArea, {
-                    scale: 2,
-                    backgroundColor: '#0D0B09',
-                    useCORS: true,
-                    allowTaint: true,
-                    logging: false
-                }).then(canvas => {
-                    // Kembalikan tombol WA
-                    plKontak.style.display = origDisplay;
-
-                    // Gambar tombol WA secara manual ke canvas jika ada kontak
-                    if (kontakAdmin) {
-                        const ctx = canvas.getContext('2d');
-                        const scale = 2;
-                        const cw = canvas.width;
-                        const ch = canvas.height;
-
-                        // Ukuran & posisi tombol (tengah bawah)
-                        const btnW = 260 * scale;
-                        const btnH = 40 * scale;
-                        const btnX = (cw - btnW) / 2;
-                        const btnY = ch - (72 * scale); // jarak dari bawah
-
-                        // Background hijau rounded
-                        const r = 20 * scale;
-                        ctx.beginPath();
-                        ctx.moveTo(btnX + r, btnY);
-                        ctx.lineTo(btnX + btnW - r, btnY);
-                        ctx.quadraticCurveTo(btnX + btnW, btnY, btnX + btnW, btnY + r);
-                        ctx.lineTo(btnX + btnW, btnY + btnH - r);
-                        ctx.quadraticCurveTo(btnX + btnW, btnY + btnH, btnX + btnW - r, btnY + btnH);
-                        ctx.lineTo(btnX + r, btnY + btnH);
-                        ctx.quadraticCurveTo(btnX, btnY + btnH, btnX, btnY + btnH - r);
-                        ctx.lineTo(btnX, btnY + r);
-                        ctx.quadraticCurveTo(btnX, btnY, btnX + r, btnY);
-                        ctx.closePath();
-                        ctx.fillStyle = '#25D366';
-                        ctx.fill();
-
-                        // Badge "WA" putih di kiri
-                        const badgeW = 38 * scale;
-                        const badgeH = 24 * scale;
-                        const badgeX = btnX + 12 * scale;
-                        const badgeY = btnY + (btnH - badgeH) / 2;
-                        const br = 5 * scale;
-                        ctx.beginPath();
-                        ctx.moveTo(badgeX + br, badgeY);
-                        ctx.lineTo(badgeX + badgeW - br, badgeY);
-                        ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + br);
-                        ctx.lineTo(badgeX + badgeW, badgeY + badgeH - br);
-                        ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - br, badgeY + badgeH);
-                        ctx.lineTo(badgeX + br, badgeY + badgeH);
-                        ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - br);
-                        ctx.lineTo(badgeX, badgeY + br);
-                        ctx.quadraticCurveTo(badgeX, badgeY, badgeX + br, badgeY);
-                        ctx.closePath();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fill();
-
-                        // Teks "WA"
-                        ctx.fillStyle = '#25D366';
-                        ctx.font = `bold ${13 * scale}px Arial, sans-serif`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('WA', badgeX + badgeW / 2, btnY + btnH / 2);
-
-                        // Teks nomor WA
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = `bold ${13 * scale}px Arial, sans-serif`;
-                        ctx.textAlign = 'left';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(kontakAdmin, badgeX + badgeW + 10 * scale, btnY + btnH / 2);
-                    }
-
-                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-                    const link = document.createElement('a');
-                    link.download = `Pricelist_Emas_${getLocalDateString()}.jpg`;
-                    link.href = imgData;
-                    link.click();
-
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    showToast('Pricelist JPG berhasil diunduh! ✓');
-                }).catch(err => {
-                    plKontak.style.display = origDisplay;
-                    console.error('Error generating image:', err);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    showToast('Gagal mengunduh gambar.');
-                });
-            }, 150);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Pricelist JPG berhasil diunduh! ✓');
+            }).catch(err => {
+                console.error('Error generating image:', err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Gagal mengunduh gambar.');
+            });
         }
 
         // ==================== TRANSAKSI & INVOICE ====================
