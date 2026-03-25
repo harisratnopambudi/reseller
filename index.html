@@ -1221,6 +1221,12 @@
                             <label>Nomor WA / Kontak (Tampil di Pricelist)</label>
                             <input type="text" id="kontakAdmin" placeholder="cth: 087784477751" value="087784477751" />
                         </div>
+                        <div class="divider"></div>
+                        <div class="form-group">
+                            <label>🔒 Password Dashboard (Untuk akses Pembukuan & Transaksi)</label>
+                            <input type="password" id="passwordDashboard" placeholder="Masukkan password baru" />
+                            <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;">Kosongkan jika tidak ingin menggunakan password.</small>
+                        </div>
                         <button class="btn btn-dark" style="width:100%;margin-top:8px"
                             onclick="simpanPengaturan()">Simpan Pengaturan</button>
                     </div>
@@ -1533,6 +1539,26 @@
         </div>
     </div>
 
+    <!-- MODAL PASSWORD -->
+    <div class="modal-overlay" id="modalPassword">
+        <div class="modal" style="max-width:380px;">
+            <div class="modal-header">
+                <span class="modal-title">🔒 Masukkan Password</span>
+                <button class="close-btn" onclick="closePasswordModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Password Dashboard</label>
+                    <input type="password" id="inputPassword" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter') submitPassword()" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closePasswordModal()">Batal</button>
+                <button class="btn btn-gold" onclick="submitPassword()">Masuk</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -1550,6 +1576,8 @@
         let transaksi = [];
         let activePrices = { date: '', items: {} };
         let currentCalc = {};
+        let dashboardPassword = '';
+        let pendingAuthAction = null;
 
         // Fungsi untuk mendapatkan tanggal lokal yang benar (WIB) tanpa terpengaruh UTC
         function getLocalDateString() {
@@ -1579,6 +1607,10 @@
                 }
             } catch (e) { }
 
+            // Load password dari cache
+            const cachedPw = localStorage.getItem('lm_password');
+            if (cachedPw) dashboardPassword = cachedPw;
+
             // Render dulu dari cache
             renderActivePrices();
             syncKalkulator();
@@ -1596,6 +1628,10 @@
                         alamat: settingsData.alamat,
                         kontakAdmin: settingsData.kontak_admin
                     }));
+                    if (settingsData.password) {
+                        dashboardPassword = settingsData.password;
+                        localStorage.setItem('lm_password', dashboardPassword);
+                    }
                 }
 
                 // Fetch active prices
@@ -1664,6 +1700,12 @@
                 alamat: document.getElementById('alamatToko').value,
                 kontakAdmin: document.getElementById('kontakAdmin').value
             };
+
+            // Update password
+            const newPw = document.getElementById('passwordDashboard').value;
+            dashboardPassword = newPw;
+            localStorage.setItem('lm_password', newPw);
+
             // Simpan ke localStorage cache
             localStorage.setItem('lm_settings', JSON.stringify(settings));
 
@@ -1674,6 +1716,7 @@
                     nama: settings.nama,
                     alamat: settings.alamat,
                     kontak_admin: settings.kontakAdmin,
+                    password: dashboardPassword,
                     updated_at: new Date().toISOString()
                 });
             } catch (e) {
@@ -1686,13 +1729,50 @@
 
         loadData();
 
+        // ==================== AUTH / PASSWORD ====================
+        function requireAuth(callback) {
+            if (!dashboardPassword) { callback(); return; }
+            if (sessionStorage.getItem('lm_authed') === 'true') { callback(); return; }
+            pendingAuthAction = callback;
+            document.getElementById('inputPassword').value = '';
+            document.getElementById('modalPassword').classList.add('open');
+            setTimeout(() => document.getElementById('inputPassword').focus(), 100);
+        }
+
+        function submitPassword() {
+            const input = document.getElementById('inputPassword').value;
+            if (input === dashboardPassword) {
+                sessionStorage.setItem('lm_authed', 'true');
+                closePasswordModal();
+                if (pendingAuthAction) { pendingAuthAction(); pendingAuthAction = null; }
+            } else {
+                showToast('Password salah!');
+                document.getElementById('inputPassword').value = '';
+                document.getElementById('inputPassword').focus();
+            }
+        }
+
+        function closePasswordModal() {
+            document.getElementById('modalPassword').classList.remove('open');
+            pendingAuthAction = null;
+        }
+
         // ==================== UTIL ====================
         function showPage(page) {
+            if (page === 'pembukuan') {
+                requireAuth(() => {
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+                    document.getElementById('page-pembukuan').classList.add('active');
+                    document.querySelectorAll('nav button')[2].classList.add('active');
+                    renderPembukuan();
+                });
+                return;
+            }
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
             event.target.classList.add('active');
-            if (page === 'pembukuan') renderPembukuan();
         }
 
         function formatRp(n) { return (!n && n !== 0) ? '—' : 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
@@ -1922,12 +2002,12 @@
         // ==================== TRANSAKSI & INVOICE ====================
         function openModal() {
             if (!currentCalc.total) { showToast('Pilih / Hitung harga terlebih dahulu'); return; }
-
-            document.getElementById('tanggalTransaksi').value = getLocalDateString();
-
-            document.getElementById('mJual').textContent = formatRp(currentCalc.total);
-            updateCatatTotal();
-            document.getElementById('modalOverlay').classList.add('open');
+            requireAuth(() => {
+                document.getElementById('tanggalTransaksi').value = getLocalDateString();
+                document.getElementById('mJual').textContent = formatRp(currentCalc.total);
+                updateCatatTotal();
+                document.getElementById('modalOverlay').classList.add('open');
+            });
         }
 
         function updateCatatTotal() {
