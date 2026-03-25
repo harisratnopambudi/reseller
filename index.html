@@ -1671,8 +1671,8 @@
             plToko.textContent = tokoNama;
 
             if (kontakAdmin) {
-                // Gunakan teks murni tanpa emoji/SVG agar html2canvas bisa merender dengan benar
-                plKontak.innerHTML = `<span style="background:white; color:#25D366; font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; font-family:Arial,sans-serif; flex-shrink:0; letter-spacing:0;">WA</span><span style="color:white; font-family:'Cinzel', serif; font-weight:600; letter-spacing:0.5px;">${kontakAdmin}</span>`;
+                // Gunakan font system (Arial) agar html2canvas bisa merender tanpa perlu load Google Fonts
+                plKontak.innerHTML = `<span style="background:white; color:#25D366; font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; font-family:Arial,sans-serif; flex-shrink:0; letter-spacing:0; line-height:1.4;">WA</span><span style="color:white; font-family:Arial,sans-serif; font-weight:700; font-size:13px; letter-spacing:0.5px;">${kontakAdmin}</span>`;
                 plKontak.style.display = 'inline-flex';
             } else {
                 plKontak.style.display = 'none';
@@ -1717,29 +1717,53 @@
             btn.innerHTML = '⏳ Memproses...';
             btn.disabled = true;
 
-            html2canvas(captureArea, {
-                scale: 2,
-                backgroundColor: '#0D0B09',
-                useCORS: true,
-                allowTaint: true,
-                logging: false
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/jpeg', 0.9);
-
-                const link = document.createElement('a');
-                link.download = `Pricelist_Emas_${getLocalDateString()}.jpg`;
-                link.href = imgData;
-                link.click();
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showToast('Pricelist JPG berhasil diunduh! ✓');
-            }).catch(err => {
-                console.error('Error generating image:', err);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showToast('Gagal mengunduh gambar.');
+            // Override semua font ke system font agar html2canvas bisa render teks
+            const allEls = captureArea.querySelectorAll('*');
+            const originalFonts = [];
+            allEls.forEach(el => {
+                originalFonts.push(el.style.fontFamily);
+                const computed = window.getComputedStyle(el).fontFamily;
+                if (computed.includes('Cinzel') || computed.includes('Cormorant') || computed.includes('Libre') || computed.includes('DM Mono') || computed.includes('DM Sans')) {
+                    if (computed.includes('DM Mono') || computed.includes('DM Sans')) {
+                        el.style.fontFamily = 'Arial, sans-serif';
+                    } else {
+                        el.style.fontFamily = 'Georgia, "Times New Roman", serif';
+                    }
+                }
             });
+            const origCapture = captureArea.style.fontFamily;
+            captureArea.style.fontFamily = 'Georgia, serif';
+
+            setTimeout(() => {
+                html2canvas(captureArea, {
+                    scale: 2,
+                    backgroundColor: '#0D0B09',
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                }).then(canvas => {
+                    // Kembalikan font asli
+                    allEls.forEach((el, i) => { el.style.fontFamily = originalFonts[i]; });
+                    captureArea.style.fontFamily = origCapture;
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    const link = document.createElement('a');
+                    link.download = `Pricelist_Emas_${getLocalDateString()}.jpg`;
+                    link.href = imgData;
+                    link.click();
+
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showToast('Pricelist JPG berhasil diunduh! ✓');
+                }).catch(err => {
+                    allEls.forEach((el, i) => { el.style.fontFamily = originalFonts[i]; });
+                    captureArea.style.fontFamily = origCapture;
+                    console.error('Error generating image:', err);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showToast('Gagal mengunduh gambar.');
+                });
+            }, 200);
         }
 
         // ==================== TRANSAKSI & INVOICE ====================
