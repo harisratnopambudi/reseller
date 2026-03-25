@@ -12,6 +12,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -1494,6 +1495,11 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_URL = 'https://iqabspitqhzprxsawpip.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxYWJzcGl0cWh6cHJ4c2F3cGlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MDQwNjcsImV4cCI6MjA4OTk4MDA2N30.cdIkz3ZXAelNJexl8gESXAP5xNwP5TSOWJV67rU_NMA';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // ==================== STATE ====================
         let transaksi = [];
         let activePrices = { date: '', items: {} };
@@ -1508,12 +1514,13 @@
             return `${year}-${month}-${day}`;
         }
 
-        function loadData() {
+        // ==================== LOAD DATA (SUPABASE + FALLBACK localStorage) ====================
+        async function loadData() {
+            // Load dari localStorage dulu sebagai fallback cepat
             try {
                 const t = localStorage.getItem('lm_transaksi');
                 const s = localStorage.getItem('lm_settings');
                 const ap = localStorage.getItem('lm_active_prices');
-
                 if (t) transaksi = JSON.parse(t);
                 if (ap) activePrices = JSON.parse(ap);
                 if (s) {
@@ -1525,20 +1532,108 @@
                     document.getElementById('kontakAdmin').value = '087784477751';
                 }
             } catch (e) { }
+
+            // Render dulu dari cache
+            renderActivePrices();
+            syncKalkulator();
+
+            // Kemudian fetch dari Supabase (cloud)
+            try {
+                // Fetch settings
+                const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 1).single();
+                if (settingsData) {
+                    document.getElementById('namaToko').value = settingsData.nama || 'Haris Gold Miner';
+                    document.getElementById('alamatToko').value = settingsData.alamat || '';
+                    document.getElementById('kontakAdmin').value = settingsData.kontak_admin || '087784477751';
+                    localStorage.setItem('lm_settings', JSON.stringify({
+                        nama: settingsData.nama,
+                        alamat: settingsData.alamat,
+                        kontakAdmin: settingsData.kontak_admin
+                    }));
+                }
+
+                // Fetch active prices
+                const { data: pricesData } = await supabase.from('active_prices').select('*').eq('id', 1).single();
+                if (pricesData && pricesData.date) {
+                    activePrices = {
+                        date: pricesData.date,
+                        jam: pricesData.jam || '',
+                        items: pricesData.items || {}
+                    };
+                    localStorage.setItem('lm_active_prices', JSON.stringify(activePrices));
+                }
+
+                // Fetch transaksi
+                const { data: transaksiData } = await supabase.from('transaksi').select('*').order('created_at', { ascending: false });
+                if (transaksiData) {
+                    transaksi = transaksiData.map(t => ({
+                        id: t.id,
+                        tanggal: t.tanggal,
+                        nama: t.nama,
+                        kontak: t.kontak || '',
+                        nomorSeri: t.nomor_seri || '',
+                        gram: t.gram,
+                        qty: t.qty,
+                        modal: t.modal,
+                        hargaJual: t.harga_jual,
+                        profit: t.profit,
+                        totalBayar: t.total_bayar,
+                        metodeBayar: t.metode_bayar
+                    }));
+                    localStorage.setItem('lm_transaksi', JSON.stringify(transaksi));
+                }
+
+                // Re-render dengan data terbaru dari cloud
+                renderActivePrices();
+                syncKalkulator();
+            } catch (e) {
+                console.warn('Supabase fetch gagal, menggunakan data lokal:', e);
+            }
         }
 
-        function saveData() {
+        // ==================== SAVE DATA (SUPABASE + localStorage cache) ====================
+        async function saveData() {
+            // Tetap simpan ke localStorage sebagai cache
             localStorage.setItem('lm_transaksi', JSON.stringify(transaksi));
             localStorage.setItem('lm_active_prices', JSON.stringify(activePrices));
+
+            // Sync active prices ke Supabase
+            try {
+                await supabase.from('active_prices').upsert({
+                    id: 1,
+                    date: activePrices.date || null,
+                    jam: activePrices.jam || '',
+                    items: activePrices.items || {},
+                    updated_at: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn('Gagal sync active_prices ke Supabase:', e);
+            }
         }
 
-        function simpanPengaturan() {
+        // ==================== SIMPAN PENGATURAN (SUPABASE) ====================
+        async function simpanPengaturan() {
             const settings = {
                 nama: document.getElementById('namaToko').value,
                 alamat: document.getElementById('alamatToko').value,
                 kontakAdmin: document.getElementById('kontakAdmin').value
             };
+            // Simpan ke localStorage cache
             localStorage.setItem('lm_settings', JSON.stringify(settings));
+
+            // Simpan ke Supabase
+            try {
+                await supabase.from('settings').upsert({
+                    id: 1,
+                    nama: settings.nama,
+                    alamat: settings.alamat,
+                    kontak_admin: settings.kontakAdmin,
+                    updated_at: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn('Gagal sync settings ke Supabase:', e);
+            }
+
             renderPricelistPelanggan();
             showToast('Pengaturan Toko Disimpan ✓');
         }
@@ -1797,7 +1892,7 @@
 
         function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
-        function simpanTransaksi() {
+        async function simpanTransaksi() {
             const nama = document.getElementById('namaPembeli').value.trim();
             const nomorSeri = document.getElementById('nomorSeri').value.trim();
 
@@ -1815,6 +1910,26 @@
             };
 
             transaksi.unshift(t); saveData(); closeModal();
+
+            // Simpan ke Supabase
+            try {
+                await supabase.from('transaksi').insert({
+                    id: t.id,
+                    tanggal: t.tanggal,
+                    nama: t.nama,
+                    kontak: t.kontak,
+                    nomor_seri: t.nomorSeri,
+                    gram: t.gram,
+                    qty: t.qty,
+                    modal: t.modal,
+                    harga_jual: t.hargaJual,
+                    profit: t.profit,
+                    total_bayar: t.totalBayar,
+                    metode_bayar: t.metodeBayar
+                });
+            } catch (e) {
+                console.warn('Gagal simpan transaksi ke Supabase:', e);
+            }
 
             document.getElementById('namaPembeli').value = '';
             document.getElementById('kontakPembeli').value = '';
@@ -1852,15 +1967,29 @@
     </tr>`).join('');
         }
 
-        function hapusTransaksi(id) {
+        async function hapusTransaksi(id) {
             if (!confirm('Hapus transaksi ini?')) return;
             transaksi = transaksi.filter(t => t.id !== id);
             saveData(); renderPembukuan(); showToast('Transaksi dihapus');
+
+            // Hapus dari Supabase
+            try {
+                await supabase.from('transaksi').delete().eq('id', id);
+            } catch (e) {
+                console.warn('Gagal hapus transaksi dari Supabase:', e);
+            }
         }
 
-        function hapusSemua() {
+        async function hapusSemua() {
             if (!confirm('Hapus SEMUA transaksi?')) return;
             transaksi = []; saveData(); renderPembukuan();
+
+            // Hapus semua dari Supabase
+            try {
+                await supabase.from('transaksi').delete().neq('id', 0);
+            } catch (e) {
+                console.warn('Gagal hapus semua transaksi dari Supabase:', e);
+            }
         }
 
         function bukaInvoice(id) {
@@ -1966,9 +2095,7 @@
             showToast('CSV berhasil diunduh ✓');
         }
 
-        // Init State UI
-        renderActivePrices();
-        syncKalkulator();
+        // Init State UI — initial render handled inside loadData()
     </script>
 </body>
 
