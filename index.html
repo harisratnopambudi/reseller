@@ -1498,7 +1498,12 @@
         // ==================== SUPABASE CONFIG ====================
         const SUPABASE_URL = 'https://iqabspitqhzprxsawpip.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxYWJzcGl0cWh6cHJ4c2F3cGlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MDQwNjcsImV4cCI6MjA4OTk4MDA2N30.cdIkz3ZXAelNJexl8gESXAP5xNwP5TSOWJV67rU_NMA';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let _sb = null;
+        try {
+            _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch(e) {
+            console.warn('Supabase SDK gagal dimuat, menggunakan mode offline:', e);
+        }
 
         // ==================== STATE ====================
         let transaksi = [];
@@ -1538,9 +1543,9 @@
             syncKalkulator();
 
             // Kemudian fetch dari Supabase (cloud)
-            try {
+            if (_sb) try {
                 // Fetch settings
-                const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 1).single();
+                const { data: settingsData } = await _sb.from('settings').select('*').eq('id', 1).single();
                 if (settingsData) {
                     document.getElementById('namaToko').value = settingsData.nama || 'Haris Gold Miner';
                     document.getElementById('alamatToko').value = settingsData.alamat || '';
@@ -1553,7 +1558,7 @@
                 }
 
                 // Fetch active prices
-                const { data: pricesData } = await supabase.from('active_prices').select('*').eq('id', 1).single();
+                const { data: pricesData } = await _sb.from('active_prices').select('*').eq('id', 1).single();
                 if (pricesData && pricesData.date) {
                     activePrices = {
                         date: pricesData.date,
@@ -1564,7 +1569,7 @@
                 }
 
                 // Fetch transaksi
-                const { data: transaksiData } = await supabase.from('transaksi').select('*').order('created_at', { ascending: false });
+                const { data: transaksiData } = await _sb.from('transaksi').select('*').order('created_at', { ascending: false });
                 if (transaksiData) {
                     transaksi = transaksiData.map(t => ({
                         id: t.id,
@@ -1598,8 +1603,8 @@
             localStorage.setItem('lm_active_prices', JSON.stringify(activePrices));
 
             // Sync active prices ke Supabase
-            try {
-                await supabase.from('active_prices').upsert({
+            if (_sb) try {
+                await _sb.from('active_prices').upsert({
                     id: 1,
                     date: activePrices.date || null,
                     jam: activePrices.jam || '',
@@ -1622,8 +1627,8 @@
             localStorage.setItem('lm_settings', JSON.stringify(settings));
 
             // Simpan ke Supabase
-            try {
-                await supabase.from('settings').upsert({
+            if (_sb) try {
+                await _sb.from('settings').upsert({
                     id: 1,
                     nama: settings.nama,
                     alamat: settings.alamat,
@@ -1912,8 +1917,8 @@
             transaksi.unshift(t); saveData(); closeModal();
 
             // Simpan ke Supabase
-            try {
-                await supabase.from('transaksi').insert({
+            if (_sb) try {
+                await _sb.from('transaksi').insert({
                     id: t.id,
                     tanggal: t.tanggal,
                     nama: t.nama,
@@ -1973,8 +1978,8 @@
             saveData(); renderPembukuan(); showToast('Transaksi dihapus');
 
             // Hapus dari Supabase
-            try {
-                await supabase.from('transaksi').delete().eq('id', id);
+            if (_sb) try {
+                await _sb.from('transaksi').delete().eq('id', id);
             } catch (e) {
                 console.warn('Gagal hapus transaksi dari Supabase:', e);
             }
@@ -1985,8 +1990,8 @@
             transaksi = []; saveData(); renderPembukuan();
 
             // Hapus semua dari Supabase
-            try {
-                await supabase.from('transaksi').delete().neq('id', 0);
+            if (_sb) try {
+                await _sb.from('transaksi').delete().neq('id', 0);
             } catch (e) {
                 console.warn('Gagal hapus semua transaksi dari Supabase:', e);
             }
