@@ -1492,6 +1492,47 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT TRANSAKSI -->
+    <div class="modal-overlay" id="modalEdit">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Edit Transaksi</span>
+                <button class="close-btn" onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" />
+                <div class="form-group"><label>Nama Pembeli</label><input type="text" id="editNama" /></div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>No. HP / Kontak</label><input type="text" id="editKontak" /></div>
+                    <div class="form-group"><label>Nomor Seri LM</label><input type="text" id="editSeri" /></div>
+                </div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>Berat (gram)</label><input type="number" id="editGram" step="0.5" min="0.5" /></div>
+                    <div class="form-group"><label>Qty</label><input type="number" id="editQty" value="1" min="1" /></div>
+                </div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>Harga Modal (Rp)</label><input type="text" id="editModal" oninput="formatInput(this); hitungEdit()" /></div>
+                    <div class="form-group"><label>Keuntungan (Rp)</label><input type="text" id="editProfit" oninput="formatInput(this); hitungEdit()" /></div>
+                </div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="form-group"><label>Metode Pembayaran</label><select id="editMetode">
+                        <option>Transfer Bank</option><option>Tunai</option><option>QRIS</option>
+                    </select></div>
+                    <div class="form-group"><label>Tanggal Transaksi</label><input type="date" id="editTanggal" /></div>
+                </div>
+                <div style="background:var(--cream);border-radius:10px;padding:16px;margin-top:4px">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px">Ringkasan</div>
+                    <div class="price-row" style="margin-bottom:8px"><span>Harga Jual / pcs</span><span id="editHargaJual">—</span></div>
+                    <div class="price-row" style="margin-bottom:0;font-weight:bold;color:var(--dark);font-size:16px;"><span>Total Tagihan</span><span id="editTotal">—</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEditModal()">Batal</button>
+                <button class="btn btn-gold" onclick="simpanEditTransaksi()">✓ Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -1966,7 +2007,8 @@
       <td>${formatRp(t.modal)}</td><td style="font-weight:500">${formatRp(t.totalBayar)}</td>
       <td><span class="profit-chip">+${formatRp(t.profit)}</span></td><td>${badge(t.metodeBayar)}</td>
       <td style="display:flex;gap:6px;">
-        <button class="btn btn-outline btn-sm" onclick="bukaInvoice(${t.id})" style="padding:4px 8px; border-color:var(--gold); color:var(--dark);">🖨️ Inv</button>
+        <button class="btn btn-outline btn-sm" onclick="editTransaksi(${t.id})" style="padding:4px 8px; border-color:var(--gold); color:var(--dark);">✏️</button>
+        <button class="btn btn-outline btn-sm" onclick="bukaInvoice(${t.id})" style="padding:4px 8px; border-color:var(--gold); color:var(--dark);">🖨️</button>
         <button class="btn btn-danger btn-sm" onclick="hapusTransaksi(${t.id})" style="padding:4px 8px;">✕</button>
       </td>
     </tr>`).join('');
@@ -1995,6 +2037,91 @@
             } catch (e) {
                 console.warn('Gagal hapus semua transaksi dari Supabase:', e);
             }
+        }
+
+        // ==================== EDIT TRANSAKSI ====================
+        function editTransaksi(id) {
+            const t = transaksi.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('editId').value = t.id;
+            document.getElementById('editNama').value = t.nama || '';
+            document.getElementById('editKontak').value = t.kontak || '';
+            document.getElementById('editSeri').value = t.nomorSeri || '';
+            document.getElementById('editGram').value = t.gram;
+            document.getElementById('editQty').value = t.qty || 1;
+            document.getElementById('editModal').value = t.modal ? t.modal.toLocaleString('id-ID') : '';
+            document.getElementById('editProfit').value = t.profit ? (t.profit / (t.qty || 1)).toLocaleString('id-ID') : '';
+            document.getElementById('editMetode').value = t.metodeBayar || 'Transfer Bank';
+            document.getElementById('editTanggal').value = t.tanggal;
+            hitungEdit();
+            document.getElementById('modalEdit').classList.add('open');
+        }
+
+        function hitungEdit() {
+            const modal = parseRp(document.getElementById('editModal').value);
+            const profitPcs = parseRp(document.getElementById('editProfit').value);
+            const qty = parseInt(document.getElementById('editQty').value) || 1;
+            const hargaJual = modal + profitPcs;
+            const total = hargaJual * qty;
+            document.getElementById('editHargaJual').textContent = hargaJual > 0 ? formatRp(hargaJual) : '—';
+            document.getElementById('editTotal').textContent = total > 0 ? formatRp(total) : '—';
+        }
+
+        function closeEditModal() { document.getElementById('modalEdit').classList.remove('open'); }
+
+        async function simpanEditTransaksi() {
+            const id = parseInt(document.getElementById('editId').value);
+            const idx = transaksi.findIndex(x => x.id === id);
+            if (idx === -1) { showToast('Transaksi tidak ditemukan'); return; }
+
+            const nama = document.getElementById('editNama').value.trim();
+            if (!nama) { showToast('Nama pembeli wajib diisi'); return; }
+
+            const modal = parseRp(document.getElementById('editModal').value);
+            const profitPcs = parseRp(document.getElementById('editProfit').value);
+            const qty = parseInt(document.getElementById('editQty').value) || 1;
+            const hargaJual = modal + profitPcs;
+
+            transaksi[idx] = {
+                ...transaksi[idx],
+                nama,
+                kontak: document.getElementById('editKontak').value,
+                nomorSeri: document.getElementById('editSeri').value,
+                gram: parseFloat(document.getElementById('editGram').value),
+                qty,
+                modal,
+                hargaJual,
+                profit: profitPcs * qty,
+                totalBayar: hargaJual * qty,
+                metodeBayar: document.getElementById('editMetode').value,
+                tanggal: document.getElementById('editTanggal').value
+            };
+
+            saveData();
+
+            // Update di Supabase
+            if (_sb) try {
+                const t = transaksi[idx];
+                await _sb.from('transaksi').update({
+                    nama: t.nama,
+                    kontak: t.kontak,
+                    nomor_seri: t.nomorSeri,
+                    gram: t.gram,
+                    qty: t.qty,
+                    modal: t.modal,
+                    harga_jual: t.hargaJual,
+                    profit: t.profit,
+                    total_bayar: t.totalBayar,
+                    metode_bayar: t.metodeBayar,
+                    tanggal: t.tanggal
+                }).eq('id', id);
+            } catch (e) {
+                console.warn('Gagal update transaksi di Supabase:', e);
+            }
+
+            closeEditModal();
+            renderPembukuan();
+            showToast('Transaksi diupdate ✓');
         }
 
         function bukaInvoice(id) {
