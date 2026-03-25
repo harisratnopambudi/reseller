@@ -1671,9 +1671,8 @@
             plToko.textContent = tokoNama;
 
             if (kontakAdmin) {
-                // Gunakan teks + emoji biasa agar html2canvas bisa merender dengan benar
-                // SVG inline tidak didukung oleh html2canvas
-                plKontak.innerHTML = `<span style="font-size:16px; line-height:1; flex-shrink:0;">&#x1F4F2;</span><span style="color:white; font-family:'Cinzel', serif; font-weight:600; letter-spacing:0.5px;">${kontakAdmin}</span>`;
+                // Gunakan teks murni tanpa emoji/SVG agar html2canvas bisa merender dengan benar
+                plKontak.innerHTML = `<span style="background:white; color:#25D366; font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; font-family:Arial,sans-serif; flex-shrink:0; letter-spacing:0;">WA</span><span style="color:white; font-family:'Cinzel', serif; font-weight:600; letter-spacing:0.5px;">${kontakAdmin}</span>`;
                 plKontak.style.display = 'inline-flex';
             } else {
                 plKontak.style.display = 'none';
