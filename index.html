@@ -794,10 +794,29 @@
                         if (el) el.value = val > 0 ? val.toLocaleString('id-ID') : '';
                     });
                 } else {
-                    // Set default values on first load
                     resetDefaultMargins();
                 }
             } catch(e) {}
+        }
+
+        // ==================== MASKING NOMOR HP ====================
+        /**
+         * Sensor nomor HP: tampilkan hanya 3 digit terakhir, sisanya diganti bintang.
+         * Contoh: "08123456789" → "********789"
+         * Bekerja untuk berbagai format (spasi, strip, +62, dll.)
+         */
+        function maskPhoneNumber(phone) {
+            if (!phone || phone.trim() === '' || phone === '-') return phone;
+            // Ekstrak hanya digit
+            const digitsOnly = phone.replace(/\D/g, '');
+            if (digitsOnly.length <= 3) return phone; // terlalu pendek, jangan sensor
+            // Cek apakah konten adalah nomor HP (mayoritas digit)
+            const digitRatio = digitsOnly.length / phone.replace(/\s/g, '').length;
+            if (digitRatio < 0.6) return phone; // bukan nomor HP, kembalikan asli
+            // Sensor: tampilkan hanya 3 digit terakhir
+            const last3 = digitsOnly.slice(-3);
+            const maskedLength = digitsOnly.length - 3;
+            return '*'.repeat(maskedLength) + last3;
         }
 
         // ==================== LOAD DATA ====================
@@ -833,7 +852,6 @@
                     document.getElementById('kontakAdmin').value = settingsData.kontak_admin || '087784477751';
                     localStorage.setItem('lm_settings', JSON.stringify({ nama: settingsData.nama, alamat: settingsData.alamat, kontakAdmin: settingsData.kontak_admin }));
                     if (settingsData.password) { dashboardPassword = settingsData.password; localStorage.setItem('lm_password', dashboardPassword); }
-                    // Load margin dari Supabase jika ada
                     if (settingsData.margins) {
                         localStorage.setItem('lm_margins', JSON.stringify(settingsData.margins));
                         loadMarginSettings();
@@ -1205,6 +1223,7 @@
             document.getElementById('invNo').textContent = "INV-" + t.id.toString().slice(-6);
             document.getElementById('invTanggal').textContent = new Date(t.tanggal+"T00:00:00").toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
             document.getElementById('invPembeliNama').textContent = t.nama;
+            // Tampilkan nomor HP asli di preview (tidak disensor)
             document.getElementById('invPembeliKontak').textContent = t.kontak || '-';
             document.getElementById('invMetode').textContent = t.metodeBayar;
             document.getElementById('invGram').textContent = t.gram;
@@ -1222,8 +1241,20 @@
             const paper = document.querySelector('#modalInvoice .invoice-paper');
             const btn = document.getElementById('btnCetakInvoice');
             if (!paper) return;
-            const originalText = btn.innerHTML; btn.innerHTML = '⏳ Memproses...'; btn.disabled = true;
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Memproses...';
+            btn.disabled = true;
+
+            // ── Sensor nomor HP sebelum capture ──
+            const kontakEl = document.getElementById('invPembeliKontak');
+            const originalKontak = kontakEl.textContent;
+            kontakEl.textContent = maskPhoneNumber(originalKontak);
+
             html2canvas(paper, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
+                // ── Pulihkan nomor HP asli setelah capture ──
+                kontakEl.textContent = originalKontak;
+
                 const { jsPDF } = window.jspdf;
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const pxW = canvas.width, pxH = canvas.height, mmW = 210;
@@ -1232,8 +1263,17 @@
                 pdf.addImage(imgData, 'JPEG', 0, 0, mmW, mmH);
                 const invNo = document.getElementById('invNo').textContent || 'INVOICE';
                 pdf.save(`${invNo}.pdf`);
-                btn.innerHTML = originalText; btn.disabled = false; showToast('PDF berhasil diunduh ✓');
-            }).catch(err => { console.error(err); btn.innerHTML = originalText; btn.disabled = false; showToast('Gagal generate PDF.'); });
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('PDF berhasil diunduh ✓');
+            }).catch(err => {
+                // ── Pulihkan juga jika terjadi error ──
+                kontakEl.textContent = originalKontak;
+                console.error(err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Gagal generate PDF.');
+            });
         }
 
         function closeInvoice() { document.getElementById('modalInvoice').classList.remove('open'); }
